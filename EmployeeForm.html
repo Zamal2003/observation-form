@@ -170,7 +170,7 @@
     
             try {
                 // Send POST request
-                const response = await fetch('http://localhost:5000/api/form/observations', {
+                const response = await fetch('https://serve2-o.vercel.app/api/form/observations', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
