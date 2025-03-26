@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floating Label Form</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: black;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    
+        .form-container {
+            background-color: #191c24;
+            border-radius: 10px;
+            padding: 20px;
+            width: 100%;
+            max-width: 450px;
+            color: #fff;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+        }
+    
+        .form-control, .form-select {
+            background-color: black !important;
+            color: white !important;
+            border: 1px solid #fff !important;
+        }
+    
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+    
+        .form-control:focus, .form-select:focus {
+            background-color: black !important;
+            color: white !important;
+            border-color: #fff !important;
+            box-shadow: none !important;
+        }
+    
+        @media (max-width: 576px) {
+            body {
+                align-items: flex-start;
+            }
+    
+            .form-container {
+                padding: 15px;
+                width: 100%;
+            }
+        }
+    
+        button[type="submit"] {
+            margin-top: 15px;
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="col-sm-12 col-xl-6">
+        <div class="form-container">
+            <h6 class="mb-4 text-center">Observation Form</h6>
+            <form id="observationForm">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="floatingName" placeholder="Name" name="name" required>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="floatingDesignation" placeholder="Designation" name="designation" required>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="date" class="form-control" id="floatingDate" placeholder="Date" name="date" required >
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="floatingLocation" placeholder="Location" name="location" required>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="floatingResponsiblePerson" placeholder="Responsible-Person" name="responsiblePerson" required>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="floatingObservation" placeholder="Observation" name="observation" required>
+                </div>
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="floatingSelect" aria-label="Floating label select example" name="option" required>
+                        <option selected>Select</option>
+                        <option value="U.A">U.A</option>
+                        <option value="U.C">U.C</option>
+                    </select>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea class="form-control" placeholder="Corrective Action" id="floatingTextarea" style="height: 150px;" name="correctiveAction" required></textarea>
+                </div>
+                <div class="form-floating">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Set the current date in the date field
+        document.getElementById('floatingDate').value = new Date().toISOString().split('T')[0];
+    
+        // Form validation function (ADD THIS)
+        function validateForm() {
+            const requiredFields = [
+                'floatingName',
+                'floatingObservation',
+                'floatingSelect',
+                'floatingTextarea'
+            ];
+    
+            let isValid = true;
+    
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+    
+            return isValid;
+        }
+    
+        // Initialize field validation on blur (ADD THIS)
+        document.querySelectorAll('input[required], textarea[required], select[required]').forEach(field => {
+            field.addEventListener('blur', function() {
+                if (!this.value.trim()) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        });
+    
+        // Handle form submission
+        document.getElementById('observationForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+    
+            // Validate form before submission
+            if (!validateForm()) {
+                showError('Please fill in all required fields');
+                return;
+            }
+    
+            // Show loading state
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+    
+            // Gather form data
+            const formData = {
+                name: document.getElementById('floatingName').value,
+                designation: document.getElementById('floatingDesignation').value,
+                date: document.getElementById('floatingDate').value,
+                location: document.getElementById('floatingLocation').value,
+                responsiblePerson: document.getElementById('floatingResponsiblePerson').value,
+                observation: document.getElementById('floatingObservation').value,
+                option: document.getElementById('floatingSelect').value,
+                correctiveAction: document.getElementById('floatingTextarea').value,
+                category: document.getElementById('floatingSelect').value,
+                createdAt: new Date()
+            };
+    
+            try {
+                // Send POST request
+                const response = await fetch('http://localhost:5000/api/form/observations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+    
+                if (response.ok) {
+                    const newObservation = await response.json();
+                    showSuccessMessage();
+                    document.getElementById('observationForm').reset();
+                    
+                    // Only try to add to table if the element exists
+                    const tableBody = document.querySelector('#observationsTable tbody');
+                    if (tableBody) {
+                        addNewObservationToTable(newObservation.observation);
+                    }
+                } else {
+                    const errorData = await response.json();
+                    showError(errorData.error || 'Failed to submit form');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Network error. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        });
+    
+        // Display success message (ensure this exists)
+        function showSuccessMessage() {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.role = 'alert';
+            alertDiv.innerHTML = `
+                <strong>Success!</strong> Form submitted successfully.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            const container = document.querySelector('.container') || document.body;
+            container.prepend(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.classList.remove('show');
+                setTimeout(() => alertDiv.remove(), 150);
+            }, 5000);
+        }
+    
+        // Display error message (ensure this exists)
+        function showError(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+            alertDiv.role = 'alert';
+            alertDiv.innerHTML = `
+                <strong>Error!</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            const container = document.querySelector('.container') || document.body;
+            container.prepend(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.classList.remove('show');
+                setTimeout(() => alertDiv.remove(), 150);
+            }, 5000);
+        }
+    
+        // Add new observation to table (ensure this exists)
+        function addNewObservationToTable(observation) {
+            const tableBody = document.querySelector('#observationsTable tbody');
+            if (!tableBody) return;
+    
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td>${new Date(observation.createdAt).toLocaleString()}</td>
+                <td>${observation.name}</td>
+                <td>${observation.designation}</td>
+                <td>${observation.location}</td>
+                <td>${observation.observation}</td>
+                <td>${observation.category}</td>
+                <td>${observation.correctiveAction}</td>
+            `;
+            
+            tableBody.insertBefore(newRow, tableBody.firstChild);
+            newRow.classList.add('table-success');
+            setTimeout(() => newRow.classList.remove('table-success'), 3000);
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
